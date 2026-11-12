@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الري الذكي</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#121c17;--card:#1c2b24;--line:#2b3f35;--tx:#e8efe9;--mu:#8fa398;--water:#5cc8ff;--soil:#e0a458;--bad:#e5685a}
+*{box-sizing:border-box;margin:0}
+body{font-family:Tajawal,sans-serif;background:var(--bg);color:var(--tx);padding:16px;max-width:640px;margin:auto}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+h1{font-size:22px;font-weight:800}
+#conn{font-size:13px;color:var(--mu)}
+#conn:before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--bad);margin-inline-end:6px}
+#conn.on:before{background:#6fcf8a}
+.pump{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:22px;text-align:center;margin-bottom:14px;transition:border-color .3s}
+.pump.on{border-color:var(--water)}
+.pump b{display:block;font-size:34px;font-weight:800;margin-top:4px}
+.pump.on b{color:var(--water)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.c{background:var(--card);border-radius:12px;padding:14px}
+.c small{color:var(--mu);font-size:13px}
+.c b{display:block;font-size:26px;font-weight:700;margin:4px 0 8px}
+.bar{height:5px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--soil);transition:width .5s}
+.ctl{background:var(--card);border-radius:12px;padding:14px;display:grid;gap:12px}
+.row{display:flex;gap:8px}
+button,input{font:inherit;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--tx);padding:11px;flex:1}
+button{cursor:pointer;font-weight:700}
+button.sel{background:var(--water);color:#06222f;border-color:var(--water)}
+button:disabled{opacity:.4;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:2px solid var(--water)}
+</style>
+</head>
+<body>
+<header><h1>الري الذكي</h1><span id="conn">غير متصل</span></header>
+<div class="pump" id="pump"><small>الطلمبة</small><b id="pt">واقفة</b></div>
+<div class="grid">
+<div class="c"><small>رطوبة التربة</small><b id="soil">-</b><div class="bar"><i id="b_soil"></i></div></div>
+<div class="c"><small>الإضاءة</small><b id="ldr">-</b><div class="bar"><i id="b_ldr"></i></div></div>
+<div class="c"><small>جودة المياه (TDS)</small><b id="tds">-</b><div class="bar"><i id="b_tds"></i></div></div>
+<div class="c"><small>درجة الحرارة</small><b id="temp">-</b><div class="bar"><i id="b_temp"></i></div></div>
+<div class="c"><small>رطوبة الجو</small><b id="hum">-</b><div class="bar"><i id="b_hum"></i></div></div>
+</div>
+<div class="ctl">
+<div class="row"><button id="m_auto">أوتوماتيك</button><button id="m_manual">يدوي</button></div>
+<div class="row"><button id="p_on">تشغيل الطلمبة</button><button id="p_off">إيقاف الطلمبة</button></div>
+<div class="row"><input id="th" type="number" min="0" max="4095" aria-label="حد رطوبة التربة"><button id="th_save">حفظ الحد</button></div>
+</div>
+<script>
+const DB="https://smart-irrigation-3814e-default-rtdb.europe-west1.firebasedatabase.app";
+const $=id=>document.getElementById(id);
+let ctl={mode:"auto",pump:0,threshold:1500};
+const put=o=>fetch(DB+"/control.json",{method:"PATCH",body:JSON.stringify(o)}).then(tick);
+const set=(k,v,max)=>{$(k).textContent=v==null?"-":v;$("b_"+k).style.width=v==null?0:Math.min(100,v/max*100)+"%"};
+async function tick(){
+ try{
+  const [s,c]=await Promise.all([fetch(DB+"/sensors.json").then(r=>r.json()),fetch(DB+"/control.json").then(r=>r.json())]);
+  if(c)ctl={...ctl,...c};
+  const on=s&&Date.now()-s.ts<15000;
+  $("conn").className=on?"on":"";$("conn").textContent=on?"متصل":"غير متصل";
+  if(s){set("soil",s.soil,4095);set("ldr",s.ldr,4095);set("tds",s.tds,4095);set("temp",s.temp,50);set("hum",s.hum,100);
+   $("pump").className="pump"+(s.pump?" on":"");$("pt").textContent=s.pump?"شغالة":"واقفة"}
+  const m=ctl.mode==="manual";
+  $("m_auto").className=m?"":"sel";$("m_manual").className=m?"sel":"";
+  $("p_on").disabled=$("p_off").disabled=!m;
+  $("p_on").className=m&&ctl.pump?"sel":"";$("p_off").className=m&&!ctl.pump?"sel":"";
+  if(document.activeElement!==$("th"))$("th").value=ctl.threshold;
+ }catch(e){$("conn").className="";$("conn").textContent="غير متصل"}
+}
+$("m_auto").onclick=()=>put({mode:"auto"});
+$("m_manual").onclick=()=>put({mode:"manual"});
+$("p_on").onclick=()=>put({pump:1});
+$("p_off").onclick=()=>put({pump:0});
+$("th_save").onclick=()=>put({threshold:+$("th").value});
+tick();setInterval(tick,2000);
+</script>
+</body>
+</html>
