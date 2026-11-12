@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>نظام الري الذكي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <h1>نظام الري الذكي</h1>
+  <div id="conn" class="conn off"><span class="dot"></span><span id="connText">غير متصل</span></div>
+</header>
+
+<main>
+  <section class="pump-panel">
+    <div id="pumpBox" class="pump off">
+      <div class="pump-icon">💧</div>
+      <div>
+        <div class="pump-label">الطلمبة</div>
+        <div id="pumpText" class="pump-text">واقفة</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="seg" role="group" aria-label="وضع التشغيل">
+        <button id="btnAuto" class="active">Automatic</button>
+        <button id="btnManual">Manual</button>
+      </div>
+      <div id="manualBtns" class="manual hidden">
+        <button id="btnOn" class="on">تشغيل</button>
+        <button id="btnOff" class="offb">إيقاف</button>
+      </div>
+      <div class="thr">
+        <label for="thr">حد رطوبة التربة للتشغيل الأوتوماتيك</label>
+        <div class="thr-row">
+          <input id="thr" type="number" min="0" max="4095" value="1500">
+          <button id="btnThr">حفظ الحد</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cards">
+    <article class="card"><div class="ic">🌱</div><div class="nm">رطوبة التربة</div><div class="val"><b id="v-soil">--</b><small>/ 4095</small></div><div class="bar"><i id="b-soil"></i></div></article>
+    <article class="card"><div class="ic">☀️</div><div class="nm">الإضاءة</div><div class="val"><b id="v-ldr">--</b><small>/ 4095</small></div><div class="bar"><i id="b-ldr"></i></div></article>
+    <article class="card"><div class="ic">🧪</div><div class="nm">جودة المياه (TDS)</div><div class="val"><b id="v-tds">--</b><small>/ 4095</small></div><div class="bar"><i id="b-tds"></i></div></article>
+    <article class="card"><div class="ic">🌡️</div><div class="nm">درجة الحرارة</div><div class="val"><b id="v-temp">--</b><small>°C</small></div><div class="bar"><i id="b-temp"></i></div></article>
+    <article class="card"><div class="ic">💨</div><div class="nm">رطوبة الجو</div><div class="val"><b id="v-hum">--</b><small>%</small></div><div class="bar"><i id="b-hum"></i></div></article>
+  </section>
+
+  <section class="chart-box">
+    <h2>آخر 50 قراءة</h2>
+    <div class="chart-wrap"><canvas id="chart"></canvas></div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
